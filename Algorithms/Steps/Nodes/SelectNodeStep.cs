@@ -9,17 +9,17 @@ using System.Windows.Media;
 
 namespace GraphEditor.Algorithms.Steps.Nodes
 {
-    internal class SelectNodeStep : INodeStep
+    public class SelectNodeStep : INodeStep
     {
-        public NodeVM Node { get; private set; }
+        public int NodeId { get; private set; }
 
         public Color Color => StepsColors.SelectedNodeColor;
 
         public bool IsPermanent => false;
 
-        public SelectNodeStep(NodeVM node)
+        public SelectNodeStep(int nodeId)
         {
-            Node = node;
+            NodeId = nodeId;
         }
     }
 }

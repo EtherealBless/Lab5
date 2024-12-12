@@ -15,10 +15,10 @@ namespace GraphEditor.Algorithms
 
         public async IAsyncEnumerable<IStep> RunAlgorithm(Graph graph)
         {
-            yield return new SelectNodeStep(graph.Nodes.First());
-            yield return new CheckedNodeStep(graph.Nodes.First());
-            yield return new SelectNodeStep(graph.Nodes[1]);
-            yield return new CheckedNodeStep(graph.Nodes[1]);
+            yield return new SelectNodeStep(graph.Nodes.First().Id);
+            yield return new CheckedNodeStep(graph.Nodes.First().Id);
+            yield return new SelectNodeStep(graph.Nodes[1].Id);
+            yield return new CheckedNodeStep(graph.Nodes[1].Id);
             Console.WriteLine("Done");
         }
     }

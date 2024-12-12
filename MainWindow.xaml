@@ -5,6 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphEditor"
+        xmlns:Visualization="clr-namespace:GraphEditor.Visualization"
         mc:Ignorable="d"
         Title="Graph Editor"
         Height="600"
@@ -12,10 +13,11 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
     <Window.Resources>
+        <Visualization:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
         <Style x:Key="NodeStyle"
-                TargetType="Ellipse">
+               TargetType="Ellipse">
             <Setter Property="Fill"
-                    Value="LightBlue"/>
+                    Value="{Binding Color, Converter={StaticResource ColorToBrushConverter}}"/>
             <Setter Property="Stroke"
                     Value="DarkBlue"/>
             <Setter Property="StrokeThickness"
@@ -23,7 +25,7 @@
         </Style>
 
         <Style x:Key="EdgeStyle"
-                TargetType="Line">
+               TargetType="Line">
             <Setter Property="Stroke"
                     Value="Black"/>
             <Setter Property="StrokeThickness"
@@ -31,7 +33,7 @@
         </Style>
 
         <Style x:Key="NodeTextStyle"
-                TargetType="TextBlock">
+               TargetType="TextBlock">
             <Setter Property="HorizontalAlignment"
                     Value="Center"/>
             <Setter Property="VerticalAlignment"
@@ -42,21 +44,21 @@
     </Window.Resources>
 
     <Grid Name="CanvasGrid"
-            Margin="-15,40,0,0">
+          Margin="-15,40,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Canvas Grid.Row="0"
-                DataContext="{Binding Graph}">
+                DataContext="{Binding GraphVM}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Canvas Grid.Row="0">
-                    <ItemsControl ItemsSource="{Binding Nodes}">
+                    <ItemsControl ItemsSource="{Binding NodesVM}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Canvas/>
@@ -74,8 +76,8 @@
                             <DataTemplate>
                                 <Grid>
                                     <Ellipse Style="{StaticResource NodeStyle}"
-                                            Width="{Binding Widht}"
-                                            Height="{Binding Height}"/>
+                                             Width="{Binding Widht}"
+                                             Height="{Binding Height}"/>
                                     <!--<TextBlock Style="{StaticResource NodeTextStyle}" Text="{Binding Id}"/>-->
                                 </Grid>
                             </DataTemplate>
@@ -84,7 +86,7 @@
                 </Canvas>
 
                 <Canvas Grid.Row="1">
-                    <ItemsControl ItemsSource="{Binding Edges}">
+                    <ItemsControl ItemsSource="{Binding EdgesVM}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Canvas/>
@@ -104,19 +106,70 @@
             </Grid>
         </Canvas>
         <ComboBox x:Name="SelectAlgorithmCM"
-                HorizontalAlignment="Left"
-                Margin="25,-32,0,0"
-                VerticalAlignment="Top"
-                Width="120"
-                ItemsSource="{Binding Algorithms}"
-                SelectedValuePath="Value"
-                DisplayMemberPath="Key"
-                SelectedItem="{Binding SelectedAlgorithm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-        <Button Content="Run"
+                  HorizontalAlignment="Left"
+                  Margin="25,-32,0,0"
+                  VerticalAlignment="Top"
+                  Width="120"
+                  ItemsSource="{Binding Algorithms}"
+                  SelectedValuePath="Value"
+                  DisplayMemberPath="Key"
+                  SelectedValue="{Binding SelectedAlgorithm, UpdateSourceTrigger=PropertyChanged}"/>
+        <Button x:Name="RunStopButton"
                 HorizontalAlignment="Left"
                 Margin="150,-31,0,0"
                 VerticalAlignment="Top"
                 Width="105"
-                Command="{Binding RunAlgorithm}"/>
+                Command="{Binding RunStopAlgorithm}">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                            <Setter Property="Content" Value="Stop"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsRunning}" Value="False">
+                            <Setter Property="Content" Value="Run"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button HorizontalAlignment="Left"
+                Margin="265,-31,0,0"
+                VerticalAlignment="Top"
+                Width="75"
+                Content="Step forward"
+                Command="{Binding StepForward}">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CanStepForward}" Value="False">
+                            <Setter Property="IsEnabled" Value="False"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CanStepForward}" Value="True">
+                            <Setter Property="IsEnabled" Value="True"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button HorizontalAlignment="Left"
+                Margin="345,-31,0,0"
+                VerticalAlignment="Top"
+                Width="75"
+                Command="{Binding StepBack}">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CanStepBack}" Value="False">
+                            <Setter Property="IsEnabled" Value="False"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CanStepBack}" Value="True">
+                            <Setter Property="IsEnabled" Value="True"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+            <Button.Content>Step back</Button.Content>
+        </Button>
     </Grid>
 </Window>

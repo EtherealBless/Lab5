@@ -10,6 +10,6 @@ namespace GraphEditor.Algorithms.Steps.Nodes
 {
     internal interface INodeStep : IStep
     {
-        NodeVM Node { get; }
+        int NodeId { get; }
     }
 }

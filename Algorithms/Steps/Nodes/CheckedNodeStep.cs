@@ -9,12 +9,12 @@ using System.Windows.Media;
 
 namespace GraphEditor.Algorithms.Steps.Nodes
 {
-    internal class CheckedNodeStep : INodeStep
+    public class CheckedNodeStep : INodeStep
     {
-        public NodeVM Node { get; }
+        public int NodeId { get; }
         public Color Color => StepsColors.CheckedNodeColor;
         public bool IsPermanent => true;
 
-        public CheckedNodeStep(NodeVM node) => Node = node;
+        public CheckedNodeStep(int nodeId) => NodeId = nodeId;
     }
 }
