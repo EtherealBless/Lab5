@@ -1,16 +1,22 @@
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Converters;
 using GraphEditor.Algorithms.Steps;
+using System.Windows;
 using GraphEditor.Algorithms.Steps.Nodes;
+using System.Collections.ObjectModel;
 
 namespace GraphEditor.ViewModels;
 
-public class GraphVM : BaseVM
+public class GraphVM : BaseVM, ICloneable
 {
     private Graph _graph;
-    private List<NodeVM> _nodesVM = new List<NodeVM>();
-    private List<EdgeVM> _edgesVM = new List<EdgeVM>();
+    private ObservableCollection<NodeVM> _nodesVM = new ObservableCollection<NodeVM>();
+    private ObservableCollection<EdgeVM> _edgesVM = new ObservableCollection<EdgeVM>();
     public Graph Graph
     {
         get
@@ -23,8 +29,9 @@ public class GraphVM : BaseVM
             OnPropertyChanged();
         }
     }
-
-    public List<NodeVM> NodesVM
+    // public ICommand NodeClickCommand { get; set; }
+    public ICommand CanvasClickCommand { get; set; }
+    public ObservableCollection<NodeVM> NodesVM
     {
         get
         {
@@ -34,11 +41,14 @@ public class GraphVM : BaseVM
         {
             _nodesVM = value;
             _nodesDict.Clear();
-            _nodesVM.ForEach(x => _nodesDict.Add(x.Node.Id, x));
+            for (int i = 0; i < _nodesVM.Count; i++)
+            {
+                _nodesDict.Add(_nodesVM[i].Node.Id, _nodesVM[i]);
+            }
             OnPropertyChanged();
         }
     }
-    public List<EdgeVM> EdgesVM
+    public ObservableCollection<EdgeVM> EdgesVM
     {
         get
         {
@@ -46,6 +56,7 @@ public class GraphVM : BaseVM
         }
         set
         {
+            Console.WriteLine("EdgesVM set");
             _edgesVM = value;
             OnPropertyChanged();
         }
@@ -53,12 +64,32 @@ public class GraphVM : BaseVM
 
     private Dictionary<int, NodeVM> _nodesDict = new Dictionary<int, NodeVM>();
 
-    public GraphVM(Graph graph)
+    public GraphVM(Graph graph, ICommand nodeClickCommand, ICommand canvasClickCommand)
     {
         Graph = graph;
+        // NodeClickCommand = nodeClickCommand;
+        CanvasClickCommand = canvasClickCommand;
     }
 
-    public void ChangeColor(Node node, Color color)
+    public void AddNode(System.Windows.Point point)
+    {
+        var node = new Node(_graph.Nodes.Count + 1, "New node");
+        var nodeVM = new NodeVM(node, point.X, point.Y);
+        _graph.Nodes.Add(node);
+        _nodesVM.Add(nodeVM);
+        _nodesDict.Add(nodeVM.Node.Id, nodeVM);
+        OnPropertyChanged(nameof(NodesVM));
+    }
+
+    public void AddEdge(NodeVM nodeFrom, NodeVM nodeTo)
+    {
+        var edge = new Edge(nodeFrom.Node, nodeTo.Node);
+        _graph.Edges.Add(edge);
+        _edgesVM.Add(new EdgeVM(nodeFrom, nodeTo));
+        OnPropertyChanged(nameof(EdgesVM));
+    }
+
+    public void ChangeColor(Node node, System.Windows.Media.Color color)
     {
         _nodesDict[node.Id].Color = color;
     }
@@ -86,4 +117,19 @@ public class GraphVM : BaseVM
         _nodesDict[step.NodeId].Color = Constants.StepsColors.CheckedNodeColor;
     }
 
+    public object Clone()
+    {
+        var clone = new GraphVM(Graph, null, CanvasClickCommand);
+        clone.NodesVM = new ObservableCollection<NodeVM>(NodesVM.Select(x => (NodeVM)x.Clone()).ToList());
+
+        var edges = new ObservableCollection<EdgeVM>();
+        foreach (var edgeVM in EdgesVM)
+        {
+            var nodeFrom = clone._nodesDict[edgeVM.NodeFrom.Node.Id];
+            var nodeTo = clone._nodesDict[edgeVM.NodeTo.Node.Id];
+            edges.Add(new EdgeVM(nodeFrom, nodeTo));
+        }
+        clone.EdgesVM = edges;
+        return clone;
+    }
 }

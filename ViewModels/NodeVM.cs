@@ -1,8 +1,10 @@
+using System;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace GraphEditor.ViewModels;
 
-public class NodeVM : BaseVM
+public class NodeVM : BaseVM, ICloneable
 {
     private Node _node;
     public Node Node
@@ -37,9 +39,10 @@ public class NodeVM : BaseVM
         }
     }
 
-    public double Widht { get; } = 30;
-    public double Height { get; } = 30;
-
+    public  double Width { get; } = DefaultWidth;
+    public double Height { get; } = DefaultHeight;
+    public static double DefaultWidth { get; } = 30;
+    public static double DefaultHeight { get; } = 30;
     private Color _color;
     public Color Color
     {
@@ -57,5 +60,10 @@ public class NodeVM : BaseVM
         X = x;
         Y = y;
         Color = color ?? Constants.StepsColors.DefaultColor;
+    }
+
+    public object Clone()
+    {
+        return new NodeVM(Node, X, Y, Color);
     }
 }

@@ -4,7 +4,9 @@ using GraphEditor.ViewModels;
 using GraphEditor.Visualization;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -12,142 +14,191 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml.Linq;
 
-namespace GraphEditor
+namespace GraphEditor;
+public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+
+    private Graph _graph;
+    private GraphVM _graphVM;
+    public GraphVM GraphVM
+    {
+        get
+        {
+            return _graphVM;
+        }
+        set
+        {
+            _graphVM = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private DispatcherTimer _timer = new DispatcherTimer();
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    VisualizationManager visualizationManager;
+
+    private bool _isRunning = false;
+
+    public bool IsRunning
+    {
+        get => _isRunning;
+        set
+        {
+            _isRunning = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsStepableForward));
+            OnPropertyChanged(nameof(IsStepableBackward));
+        }
+    }
+
+    private void InitGraph()
     {
 
-        private Graph _graph;
-        private GraphVM _graphVM;
-        public GraphVM GraphVM
-        {
-            get
-            {
-                return _graphVM;
-            }
-            set
-            {
-                _graphVM = value;
-                OnPropertyChanged();
-            }
-        }
+        _graph = new Graph();
 
-        private DispatcherTimer _timer = new DispatcherTimer();
-        public event PropertyChangedEventHandler PropertyChanged;
+        var Nodes = _graph.Nodes;
+        var Edges = _graph.Edges;
 
-        VisualizationManager visualizationManager;
+        Nodes.Add(new Node(1, "1"));
+        Nodes.Add(new Node(2, "23"));
+        Nodes.Add(new Node(3, "3"));
 
-        private bool _isRunning = false;
+        Edges.Add(new Edge(Nodes[0], Nodes[1]));
+        Edges.Add(new Edge(Nodes[0], Nodes[2]));
+        Edges.Add(new Edge(Nodes[1], Nodes[2]));
 
-        public bool IsRunning
-        {
-            get => _isRunning;
-            set
-            {
-                _isRunning = value;
-                OnPropertyChanged();
-            }
-        }
+        GraphVM = new GraphVM(_graph, NodeClickCommand, CanvasClickCommand);
 
-        private void InitGraph()
-        {
+        var NodesVM = new ObservableCollection<NodeVM>();
+        var EdgesVM = new ObservableCollection<EdgeVM>();
 
-            _graph = new Graph();
+        NodesVM.Add(new NodeVM(Nodes[0], 100, 100));
+        NodesVM.Add(new NodeVM(Nodes[1], 200, 100));
+        NodesVM.Add(new NodeVM(Nodes[2], 300, 200));
 
-            var Nodes = _graph.Nodes;
-            var Edges = _graph.Edges;
+        EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[1]));
+        EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[2]));
+        EdgesVM.Add(new EdgeVM(NodesVM[1], NodesVM[2]));
 
-            Nodes.Add(new Node(1, "1"));
-            Nodes.Add(new Node(2, "23"));
-            Nodes.Add(new Node(3, "3"));
+        GraphVM.NodesVM = NodesVM;
+        GraphVM.EdgesVM = EdgesVM;
+    }
 
-            Edges.Add(new Edge(Nodes[0], Nodes[1]));
-            Edges.Add(new Edge(Nodes[0], Nodes[2]));
-            Edges.Add(new Edge(Nodes[1], Nodes[2]));
-
-            GraphVM = new GraphVM(_graph);
-
-            var NodesVM = new List<NodeVM>();
-            var EdgesVM = new List<EdgeVM>();
-
-            NodesVM.Add(new NodeVM(Nodes[0], 100, 100));
-            NodesVM.Add(new NodeVM(Nodes[1], 200, 100));
-            NodesVM.Add(new NodeVM(Nodes[2], 300, 200));
-
-            EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[1]));
-            EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[2]));
-            EdgesVM.Add(new EdgeVM(NodesVM[1], NodesVM[2]));
-
-            GraphVM.NodesVM = NodesVM;
-            GraphVM.EdgesVM = EdgesVM;
-        }
-
-        private Dictionary<string, IAlgorithm> _algorithms = new Dictionary<string, IAlgorithm>()
+    private Dictionary<string, IAlgorithm> _algorithms = new Dictionary<string, IAlgorithm>()
         {
             { "test", new TestAlgorithm() }
         };
 
-        public Dictionary<string, IAlgorithm> Algorithms { get => _algorithms; }
+    public Dictionary<string, IAlgorithm> Algorithms { get => _algorithms; }
 
-        public IAlgorithm SelectedAlgorithm { get; set; }
+    public IAlgorithm SelectedAlgorithm { get; set; }
 
-        public RelayCommand<IAlgorithm> RunStopAlgorithm => new RelayCommand<IAlgorithm>(RunStop, CanRun);
+    public RelayCommand<IAlgorithm> RunStopAlgorithm => new(RunStop, CanRun);
+    public RelayCommand<IAlgorithm> StepForwardCommand => new(StepForward, CanStepForward);
+    public RelayCommand<IAlgorithm> StepBackwardCommand => new(StepBackward, CanStepBackward);
+    public bool CanRun(object _) => (SelectedAlgorithm != null && !IsRunning) || (IsRunning && SelectedAlgorithm != null);
+    public bool CanStepForward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepForward();
+    public bool CanStepBackward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepBackward();
 
-        public bool CanRun(object _) => (SelectedAlgorithm != null && !IsRunning) || (IsRunning && SelectedAlgorithm != null);
-
-        public async void RunStop(object obj)
+    public bool IsStepableForward => CanStepForward();
+    public bool IsStepableBackward => CanStepBackward();
+    public RelayCommand<NodeVM> NodeClickCommand => new(NodeClick, CanNodeClick);
+    public RelayCommand<NodeVM> NodeDoubleClickCommand => new(NodeDoubleClick, CanNodeClick);
+    public RelayCommand<Canvas> CanvasClickCommand => new(CanvasClick, CanCanvasClick);
+    public RelayCommand<Canvas> CanvasDoubleClickCommand => new(CanvasDoubleClick, CanCanvasClick);
+    public bool CanNodeClick(NodeVM nodeVM) => !IsRunning;
+    public bool CanCanvasClick(Canvas canvas) => !IsRunning;
+    public async void RunStop(IAlgorithm obj)
+    {
+        if (IsRunning)
         {
-            if (IsRunning)
-            {
-                IsRunning = false;
-                _timer.Stop();
-                return;
-            }
+            IsRunning = false;
             _timer.Stop();
-            Console.WriteLine("Run");
-            IsRunning = true;
-            visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
-            InitializeTimer();
+            return;
         }
+        _timer.Stop();
+        Console.WriteLine("Run");
+        IsRunning = true;
+        visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
+        InitializeTimer();
+    }
 
-        public async void TimerTick(object? sender, EventArgs e)
-        {
-            if (!IsRunning || !visualizationManager.CanStepForward()) return;
+    public async void StepForward(object? obj = null)
+    {
+        if (CanStepForward())
             GraphVM = visualizationManager.StepForward();
-            if (!visualizationManager.CanStepForward())
-            {
-                IsRunning = false;
-            }
-            Console.WriteLine("Tick");
-        }
+    }
 
-        public MainWindow()
+    public async void StepBackward(object? obj = null)
+    {
+        if (CanStepBackward())
+            GraphVM = visualizationManager.StepBackward();
+    }
+
+    public async void TimerTick(object? sender, EventArgs e)
+    {
+        if (!IsRunning || !visualizationManager.CanStepForward()) return;
+        GraphVM = visualizationManager.StepForward();
+        if (!visualizationManager.CanStepForward())
         {
-            InitGraph();
-            InitializeComponent();
-            AllocConsole();
-            // InitializeTimer();
-
+            IsRunning = false;
         }
-
-        private void InitializeTimer()
+        Console.WriteLine("Tick");
+    }
+    private GraphClickStateManager _clickStateManager = new GraphClickStateManager();
+    private void NodeClick(NodeVM nodeVM)
+    {
+        var coords = Mouse.GetPosition(GraphCanvas);
+        if (_clickStateManager.ProcessClick((int)coords.X, (int)coords.Y, nodeVM) is NewEdgeClick newEdgeClick)
         {
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(200);
-            _timer.Tick += TimerTick;
-            _timer.Start();
+            GraphVM.AddEdge(newEdgeClick.NodeFrom, newEdgeClick.NodeTo);
         }
+    }
 
-        [DllImport("kernel32.dll")]
-        private static extern bool AllocConsole();
+    private void NodeDoubleClick(NodeVM nodeVM)
+    {
+        Console.WriteLine($"DoubleClick: {nodeVM.Node.Id}");
+    }
+
+    private void CanvasClick(Canvas canvas)
+    {
+        Console.WriteLine($"Canvas {canvas != null}");
+    }
+    private void CanvasDoubleClick(Canvas canvas)
+    {
+        var coords = Mouse.GetPosition(canvas);
+        GraphVM.AddNode(new Point(coords.X - NodeVM.DefaultWidth / 2, coords.Y - NodeVM.DefaultHeight / 2));
+        Console.WriteLine($"CanvasDoubleClick: {coords} Canvas Coords: {canvas.ActualWidth} {canvas.ActualHeight}");
+    }
+
+    public MainWindow()
+    {
+        AllocConsole();
+        InitGraph();
+        InitializeComponent();
+        // InitializeTimer();
+
+    }
+
+    private void InitializeTimer()
+    {
+        _timer = new DispatcherTimer();
+        _timer.Interval = TimeSpan.FromMilliseconds(200);
+        _timer.Tick += TimerTick;
+        _timer.Start();
+    }
+
+    [DllImport("kernel32.dll")]
+    private static extern bool AllocConsole();
 
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

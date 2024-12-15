@@ -50,14 +50,30 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Canvas Grid.Row="0"
-                DataContext="{Binding GraphVM}">
+        <Canvas Grid.Row="1"
+                DataContext="{Binding GraphVM}"
+                Background="LightGray"
+                Width="Auto"
+                Height="Auto"
+                Margin="15,0,0,0"
+                Name="GraphCanvas">
+                
+            <Canvas.InputBindings>
+                <MouseBinding Gesture="LeftClick"
+                              Command="{Binding CanvasClickCommand, 
+                              RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"/>
+                <MouseBinding Gesture="LeftDoubleClick"
+                              Command="{Binding CanvasDoubleClickCommand,
+                              RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"/>
+            </Canvas.InputBindings>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <Canvas Grid.Row="0">
+                <Canvas Grid.Row="1">
                     <ItemsControl ItemsSource="{Binding NodesVM}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -75,17 +91,25 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
+                                    <Grid.InputBindings>
+                                        <MouseBinding Gesture="LeftDoubleClick"
+                                                      Command="{Binding DataContext.NodeDoubleClickCommand, 
+                                                      RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      CommandParameter="{Binding}"/>
+                                        <MouseBinding Gesture="LeftClick"
+                                                      Command="{Binding DataContext.NodeClickCommand, 
+                                                      RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      CommandParameter="{Binding}"/>
+                                    </Grid.InputBindings>
                                     <Ellipse Style="{StaticResource NodeStyle}"
-                                             Width="{Binding Widht}"
+                                             Width="{Binding Width}"
                                              Height="{Binding Height}"/>
-                                    <!--<TextBlock Style="{StaticResource NodeTextStyle}" Text="{Binding Id}"/>-->
+                                    <TextBlock Style="{StaticResource NodeTextStyle}"
+                                               Text="{Binding Node.Id}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </Canvas>
-
-                <Canvas Grid.Row="1">
                     <ItemsControl ItemsSource="{Binding EdgesVM}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -94,15 +118,21 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Line Style="{StaticResource EdgeStyle}"
-                                      X1="{Binding From.X}"
-                                      Y1="{Binding From.Y}"
-                                      X2="{Binding To.X}"
-                                      Y2="{Binding To.Y}"/>
+                                <Grid
+                                    Margin="{Binding Margin}">
+                                    <Line Style="{StaticResource EdgeStyle}"
+                                          X1="0"
+                                          Y1="0"
+                                          X2="{Binding Width}"
+                                          Y2="{Binding Height}"/>
+                                    <TextBlock Style="{StaticResource NodeTextStyle}"
+                                               Text="{Binding NodeFrom.Node.Id}"/>
+                                </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </Canvas>
+
             </Grid>
         </Canvas>
         <ComboBox x:Name="SelectAlgorithmCM"
@@ -123,11 +153,15 @@
             <Button.Style>
                 <Style TargetType="Button">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                            <Setter Property="Content" Value="Stop"/>
+                        <DataTrigger Binding="{Binding IsRunning}"
+                                     Value="True">
+                            <Setter Property="Content"
+                                    Value="Stop"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsRunning}" Value="False">
-                            <Setter Property="Content" Value="Run"/>
+                        <DataTrigger Binding="{Binding IsRunning}"
+                                     Value="False">
+                            <Setter Property="Content"
+                                    Value="Run"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -138,15 +172,19 @@
                 VerticalAlignment="Top"
                 Width="75"
                 Content="Step forward"
-                Command="{Binding StepForward}">
+                Command="{Binding StepForwardCommand}">
             <Button.Style>
                 <Style TargetType="Button">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding CanStepForward}" Value="False">
-                            <Setter Property="IsEnabled" Value="False"/>
+                        <DataTrigger Binding="{Binding IsStepableForward}"
+                                     Value="False">
+                            <Setter Property="IsEnabled"
+                                    Value="False"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding CanStepForward}" Value="True">
-                            <Setter Property="IsEnabled" Value="True"/>
+                        <DataTrigger Binding="{Binding IsStepableForward}"
+                                     Value="True">
+                            <Setter Property="IsEnabled"
+                                    Value="True"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -156,15 +194,19 @@
                 Margin="345,-31,0,0"
                 VerticalAlignment="Top"
                 Width="75"
-                Command="{Binding StepBack}">
+                Command="{Binding StepBackwardCommand}">
             <Button.Style>
                 <Style TargetType="Button">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding CanStepBack}" Value="False">
-                            <Setter Property="IsEnabled" Value="False"/>
+                        <DataTrigger Binding="{Binding IsStepableBackward}"
+                                     Value="False">
+                            <Setter Property="IsEnabled"
+                                    Value="False"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding CanStepBack}" Value="True">
-                            <Setter Property="IsEnabled" Value="True"/>
+                        <DataTrigger Binding="{Binding IsStepableBackward}"
+                                     Value="True">
+                            <Setter Property="IsEnabled"
+                                    Value="True"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

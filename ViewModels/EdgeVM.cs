@@ -1,16 +1,39 @@
 using System;
 using System.Windows;
+using System.Windows.Input;
 
 namespace GraphEditor.ViewModels;
 
-public class EdgeVM : BaseVM
+public class EdgeVM : BaseVM, ICloneable
 {
 
     private NodeVM nodeFrom;
     private NodeVM nodeTo;
+    public Thickness Margin
+    {
+        get
+        {
+            var leftX = Math.Min(From.X, To.X);
+            var topY = Math.Min(From.Y, To.Y);
+            return new Thickness(leftX, topY, 0, 0);
+        }
+    }
 
-    
+    public double Width
+    {
+        get
+        {
+            return Math.Abs(From.X - To.X);
+        }
+    }
 
+    public double Height
+    {
+        get
+        {
+            return Math.Abs(From.Y - To.Y);
+        }
+    }
 
     public int Id { get; set; }
     public NodeVM NodeFrom
@@ -33,22 +56,22 @@ public class EdgeVM : BaseVM
     }
     private Point FromRaw
     {
-        get { return new Point(NodeFrom.X + NodeFrom.Widht / 2, NodeFrom.Y + NodeFrom.Height / 2); }
+        get { return new Point(NodeFrom.X + NodeFrom.Width / 2, NodeFrom.Y + NodeFrom.Height / 2); }
     }
     private Point ToRaw
-    { 
-        get { return new Point(NodeTo.X + NodeTo.Widht / 2, NodeTo.Y + NodeTo.Height / 2); }
+    {
+        get { return new Point(NodeTo.X + NodeTo.Width / 2, NodeTo.Y + NodeTo.Height / 2); }
     }
-    public Point From 
+    public Point From
     {
         get
         {
-            Point FromRaw = this.FromRaw; 
+            Point FromRaw = this.FromRaw;
             Point ToRaw = this.ToRaw;
             double dx = ToRaw.X - FromRaw.X;
             double dy = ToRaw.Y - FromRaw.Y;
             double angle = Math.Atan2(dy, dx);
-            double x = FromRaw.X + NodeFrom.Widht / 2 * Math.Cos(angle);
+            double x = FromRaw.X + NodeFrom.Width / 2 * Math.Cos(angle);
             double y = FromRaw.Y + NodeFrom.Height / 2 * Math.Sin(angle);
             return new Point(x, y);
         }
@@ -62,7 +85,7 @@ public class EdgeVM : BaseVM
             double dx = ToRaw.X - FromRaw.X;
             double dy = ToRaw.Y - FromRaw.Y;
             double angle = Math.Atan2(dy, dx);
-            double x = ToRaw.X - NodeTo.Widht / 2 * Math.Cos(angle);
+            double x = ToRaw.X - NodeTo.Width / 2 * Math.Cos(angle);
             double y = ToRaw.Y - NodeTo.Height / 2 * Math.Sin(angle);
             return new Point(x, y);
         }
@@ -72,5 +95,10 @@ public class EdgeVM : BaseVM
     {
         NodeFrom = nodeFrom;
         NodeTo = nodeTo;
+    }
+
+    public object Clone()
+    {
+        return new EdgeVM(NodeFrom, NodeTo);
     }
 }

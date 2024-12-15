@@ -18,7 +18,15 @@ namespace GraphEditor.Visualization
         private int _stepIndex = 0;
 
         public bool CanStepForward() => _stepIndex < _states.Count;
+        public bool CanStepBackward() => _stepIndex > 0;
 
+        /// <summary>
+        /// Warms up the visualization manager by running the algorithm on the graph,
+        /// creating a list of all the states of the graph that the algorithm goes through.
+        /// </summary>
+        /// <param name="graphVM">The initial state of the graph.</param>
+        /// <param name="algorithm">The algorithm to be run.</param>
+        /// <returns>A visualization manager with the list of states.</returns>
         public static async Task<VisualizationManager> WarmUp(GraphVM graphVM, IAlgorithm algorithm)
         {
 
@@ -51,26 +59,31 @@ namespace GraphEditor.Visualization
             _stepIndex++;
             return state;
         }
+        /// <summary>
+        /// Steps backward in the algorithm visualization process.
+        /// </summary>
+        /// <returns>The previous state of the graph.</returns>
+        public GraphVM StepBackward()
+        {
+            if (_stepIndex == 0)
+                return _states[_stepIndex];
+            if (_stepIndex == _states.Count - 1)
+                _stepIndex--;
+            var state = _states[_stepIndex];
+            _stepIndex--;
+            return state;
+        }
 
+        /// <summary>
+        /// Creates a deep copy of the state of the graph.
+        /// </summary>
+        /// <param name="graphVM">The state of the graph to be cloned.</param>
+        /// <returns>The cloned state of the graph.</returns>
         private static GraphVM CloneState(GraphVM graphVM)
         {
-            var clone = new GraphVM(graphVM.Graph);
-            var nodes = graphVM.NodesVM.Select(x => CloneNode(x)).ToList();
-            var edges = graphVM.EdgesVM.Select(x => CloneEdge(x)).ToList();
-
-            clone.NodesVM = nodes;
-            clone.EdgesVM = edges;
-            return clone;
+            var clone = graphVM.Clone() as GraphVM;
+            return clone!;
         }
 
-        private static NodeVM CloneNode(NodeVM nodeVM)
-        {
-            return new NodeVM(nodeVM.Node, nodeVM.X, nodeVM.Y, nodeVM.Color);
-        }
-
-        private static EdgeVM CloneEdge(EdgeVM edgeVM)
-        {
-            return new EdgeVM(edgeVM.NodeFrom, edgeVM.NodeTo);
-        }
     }
 }

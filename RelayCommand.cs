@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace GraphEditor
 {
-    public class RelayCommand<T> : ICommand
+    public class RelayCommand<T> : ICommand, ICloneable
     {
         #region Fields
 
@@ -74,6 +74,11 @@ namespace GraphEditor
         public void Execute(object parameter)
         {
             _execute((T)parameter);
+        }
+
+        public object Clone()
+        {
+            return new RelayCommand<T>(_execute, _canExecute);
         }
 
         #endregion
