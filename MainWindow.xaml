@@ -121,10 +121,10 @@
                                 <Grid
                                     Margin="{Binding Margin}">
                                     <Line Style="{StaticResource EdgeStyle}"
-                                          X1="0"
-                                          Y1="0"
-                                          X2="{Binding Width}"
-                                          Y2="{Binding Height}"/>
+                                          X1="{Binding NormalFrom.X}"
+                                          Y1="{Binding NormalFrom.Y}"
+                                          X2="{Binding NormalTo.X}"
+                                          Y2="{Binding NormalTo.Y}"/>
                                     <TextBlock Style="{StaticResource NodeTextStyle}"
                                                Text="{Binding NodeFrom.Node.Id}"/>
                                 </Grid>

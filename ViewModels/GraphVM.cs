@@ -84,6 +84,8 @@ public class GraphVM : BaseVM, ICloneable
     public void AddEdge(NodeVM nodeFrom, NodeVM nodeTo)
     {
         var edge = new Edge(nodeFrom.Node, nodeTo.Node);
+        nodeFrom.Node.Edges.Add(edge);
+        nodeTo.Node.Edges.Add(edge);
         _graph.Edges.Add(edge);
         _edgesVM.Add(new EdgeVM(nodeFrom, nodeTo));
         OnPropertyChanged(nameof(EdgesVM));

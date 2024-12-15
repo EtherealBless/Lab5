@@ -91,6 +91,24 @@ public class EdgeVM : BaseVM, ICloneable
         }
     }
 
+    public Point NormalFrom
+    {
+        get 
+        {
+            Point FromRaw = this.From;
+            return new Point(FromRaw.X - Margin.Left, FromRaw.Y - Margin.Top);
+        }
+    }
+
+    public Point NormalTo
+    {
+        get
+        {
+            Point ToRaw = this.To;
+            return new Point(ToRaw.X - Margin.Left, ToRaw.Y - Margin.Top);
+        }
+    }
+
     public EdgeVM(NodeVM nodeFrom, NodeVM nodeTo)
     {
         NodeFrom = nodeFrom;
