@@ -39,7 +39,7 @@ public class NodeVM : BaseVM, ICloneable
         }
     }
 
-    public  double Width { get; } = DefaultWidth;
+    public double Width { get; } = DefaultWidth;
     public double Height { get; } = DefaultHeight;
     public static double DefaultWidth { get; } = 30;
     public static double DefaultHeight { get; } = 30;
@@ -54,12 +54,24 @@ public class NodeVM : BaseVM, ICloneable
         }
     }
 
+    private Color _originalColor;
+    public Color OriginalColor
+    {
+        get => _originalColor;
+        set
+        {
+            _originalColor = value;
+            OnPropertyChanged();
+        }
+    }
+
     public NodeVM(Node node, double x, double y, Color? color = null)
     {
         Node = node;
         X = x;
         Y = y;
         Color = color ?? Constants.StepsColors.DefaultColor;
+        OriginalColor = Color; // Сохраняем исходный цвет
     }
 
     public object Clone()
