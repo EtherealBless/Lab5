@@ -134,4 +134,12 @@ public class GraphVM : BaseVM, ICloneable
         clone.EdgesVM = edges;
         return clone;
     }
+    public void Clear()
+    {
+        _graph.Nodes.Clear();
+        _graph.Edges.Clear();
+        _nodesVM.Clear();
+        _edgesVM.Clear();
+        _nodesDict.Clear();
+    }
 }
