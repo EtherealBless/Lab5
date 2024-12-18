@@ -53,9 +53,13 @@
                  Value="Black"/>
         </Style>
     </Window.Resources>
-    <Grid
-         Name="CanvasGrid"
-         Margin="-15,40,0,0">
+
+    <Grid Name="CanvasGrid"
+          Margin="-15,40,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="357*"/>
+            <ColumnDefinition Width="458*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition
                  Height="Auto"/>
@@ -226,13 +230,14 @@
                 </Style>
             </Button.Style>
         </Button>
-        <Button
-             HorizontalAlignment="Left"
-             Margin="265,-31,0,0"
-             VerticalAlignment="Top"
-             Width="75"
-             Content="Step forward"
-             Command="{Binding StepForwardCommand}">
+
+
+        <Button HorizontalAlignment="Left"
+                Margin="265,-31,0,0"
+                VerticalAlignment="Top"
+                Width="75"
+                Content="Step forward"
+                Command="{Binding StepForwardCommand}">
             <Button.Style>
                 <Style
                      TargetType="Button">
@@ -255,12 +260,18 @@
                 </Style>
             </Button.Style>
         </Button>
-        <Button
-             HorizontalAlignment="Left"
-             Margin="345,-31,0,0"
-             VerticalAlignment="Top"
-             Width="75"
-             Command="{Binding StepBackwardCommand}">
+
+
+
+
+
+
+
+        <Button HorizontalAlignment="Left"
+                Margin="345,-31,0,0"
+                VerticalAlignment="Top"
+                Width="75"
+                Command="{Binding StepBackwardCommand}" Grid.ColumnSpan="2">
             <Button.Style>
                 <Style
                      TargetType="Button">
@@ -284,5 +295,35 @@
             </Button.Style>
             <Button.Content>Step back</Button.Content>
         </Button>
+
+
+        <Button HorizontalAlignment="Left"
+        Margin="430,-31,0,0"
+        VerticalAlignment="Top"
+        Width="120"
+        Command="{Binding FindShortestPathCommand}"
+        Grid.ColumnSpan="2">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsRunning}"
+                             Value="True">
+                            <Setter Property="IsEnabled"
+                            Value="False"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsRunning}"
+                             Value="False">
+                            <Setter Property="IsEnabled"
+                            Value="True"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+            <Button.Content>Find Shortest Path</Button.Content>
+        </Button>
+
+
+
+
     </Grid>
 </Window>

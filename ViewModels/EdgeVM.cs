@@ -9,6 +9,7 @@ public class EdgeVM : BaseVM, ICloneable
 
     private NodeVM nodeFrom;
     private NodeVM nodeTo;
+
     public Thickness Margin
     {
         get
@@ -115,6 +116,14 @@ public class EdgeVM : BaseVM, ICloneable
         NodeTo = nodeTo;
     }
 
+    public double Weight { get; set; }
+
+        public EdgeVM(NodeVM nodeFrom, NodeVM nodeTo, double weight = 1.0)
+        {
+            NodeFrom = nodeFrom;
+            NodeTo = nodeTo;
+            Weight = weight;
+        }
     public object Clone()
     {
         return new EdgeVM(NodeFrom, NodeTo);
