@@ -13,7 +13,7 @@ namespace GraphEditor.Algorithms.Steps.Nodes
     {
         public int NodeId { get; private set; }
 
-        public Color Color => StepsColors.SelectedNodeColor;
+        public Color? Color => StepsColors.SelectedNodeColor;
 
         public bool IsPermanent => false;
 

@@ -9,6 +9,7 @@ using GraphEditor.Algorithms.Steps;
 using System.Windows;
 using GraphEditor.Algorithms.Steps.Nodes;
 using System.Collections.ObjectModel;
+using GraphEditor.Algorithms.Steps.Edges;
 
 namespace GraphEditor.ViewModels;
 
@@ -58,11 +59,17 @@ public class GraphVM : BaseVM, ICloneable
         {
             Console.WriteLine("EdgesVM set");
             _edgesVM = value;
+            _edgesDict.Clear();
+            for (int i = 0; i < _edgesVM.Count; i++)
+            {
+                _edgesDict.Add(_edgesVM[i].Id, _edgesVM[i]);
+            }
             OnPropertyChanged();
         }
     }
 
     private Dictionary<int, NodeVM> _nodesDict = new Dictionary<int, NodeVM>();
+    private Dictionary<int, EdgeVM> _edgesDict = new Dictionary<int, EdgeVM>();
 
     public GraphVM(Graph graph, ICommand nodeClickCommand, ICommand canvasClickCommand)
     {
@@ -83,11 +90,12 @@ public class GraphVM : BaseVM, ICloneable
 
     public void AddEdge(NodeVM nodeFrom, NodeVM nodeTo)
     {
-        var edge = new Edge(nodeFrom.Node, nodeTo.Node);
+        int newId = _edgesVM.Count == 0 ? 0 : _edgesVM.Count + 1;
+        var edge = new Edge(nodeFrom.Node, nodeTo.Node, id: newId);
         nodeFrom.Node.Edges.Add(edge);
         nodeTo.Node.Edges.Add(edge);
         _graph.Edges.Add(edge);
-        _edgesVM.Add(new EdgeVM(nodeFrom, nodeTo));
+        _edgesVM.Add(new EdgeVM(nodeFrom, nodeTo, newId));
         OnPropertyChanged(nameof(EdgesVM));
     }
 
@@ -98,25 +106,18 @@ public class GraphVM : BaseVM, ICloneable
 
     public void ApplyStep(IStep step)
     {
-        switch (step)
+        if (step is INodeStep nodeStep)
         {
-            case SelectNodeStep selectNodeStep:
-                ApplyStep(selectNodeStep);
-                break;
-            case CheckedNodeStep checkedNodeStep:
-                ApplyStep(checkedNodeStep);
-                break;
+            _nodesDict[nodeStep.NodeId].Color = nodeStep.Color ?? throw new ArgumentNullException(nameof(nodeStep.Color));
         }
-    }
-
-    public void ApplyStep(SelectNodeStep step)
-    {
-        _nodesDict[step.NodeId].Color = Constants.StepsColors.SelectedNodeColor;
-    }
-
-    public void ApplyStep(CheckedNodeStep step)
-    {
-        _nodesDict[step.NodeId].Color = Constants.StepsColors.CheckedNodeColor;
+        else if (step is IEdgeStep edgeStep)
+        {
+            _edgesDict[edgeStep.Id].Color = edgeStep.Color ?? throw new ArgumentNullException(nameof(edgeStep.Color));
+        }
+        else
+        {
+            Console.WriteLine($"Unknown step: {step.GetType().Name}");
+        }
     }
 
     public object Clone()
@@ -129,7 +130,8 @@ public class GraphVM : BaseVM, ICloneable
         {
             var nodeFrom = clone._nodesDict[edgeVM.NodeFrom.Node.Id];
             var nodeTo = clone._nodesDict[edgeVM.NodeTo.Node.Id];
-            edges.Add(new EdgeVM(nodeFrom, nodeTo));
+            edges.Add(new EdgeVM(nodeFrom, nodeTo, edgeVM.Id));
+            edges.Last().Color = edgeVM.Color;
         }
         clone.EdgesVM = edges;
         return clone;

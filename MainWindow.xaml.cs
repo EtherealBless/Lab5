@@ -92,9 +92,9 @@ namespace GraphEditor
             Nodes.Add(new Node(2, "23"));
             Nodes.Add(new Node(3, "3"));
 
-            Edges.Add(new Edge(Nodes[0], Nodes[1]));
-            Edges.Add(new Edge(Nodes[0], Nodes[2]));
-            Edges.Add(new Edge(Nodes[1], Nodes[2]));
+            Edges.Add(new Edge(Nodes[0], Nodes[1], id: 0));
+            Edges.Add(new Edge(Nodes[0], Nodes[2], id: 1));
+            Edges.Add(new Edge(Nodes[1], Nodes[2], id: 2));
 
             GraphVM = new GraphVM(_graph, NodeClickCommand, CanvasClickCommand);
 
@@ -105,9 +105,9 @@ namespace GraphEditor
             NodesVM.Add(new NodeVM(Nodes[1], 200, 100));
             NodesVM.Add(new NodeVM(Nodes[2], 300, 200));
 
-            EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[1]));
-            EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[2]));
-            EdgesVM.Add(new EdgeVM(NodesVM[1], NodesVM[2]));
+            EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[1], 0));
+            EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[2], 1));
+            EdgesVM.Add(new EdgeVM(NodesVM[1], NodesVM[2], 2));
 
             GraphVM.NodesVM = NodesVM;
             GraphVM.EdgesVM = EdgesVM;
@@ -157,7 +157,9 @@ namespace GraphEditor
         public RelayCommand<NodeVM> NodeClickCommand => new(NodeClick, CanNodeClick);
         public RelayCommand<NodeVM> NodeDoubleClickCommand => new(NodeDoubleClick, CanNodeClick);
         public RelayCommand<Canvas> CanvasClickCommand => new(CanvasClick, CanCanvasClick);
-        public RelayCommand<Canvas> CanvasDoubleClickCommand => new(CanvasAddNewNode, CanCanvasClick);
+        public RelayCommand<Canvas> CanvasNewNodeCommand => new(CanvasAddNewNode, CanCanvasClick);
+        public RelayCommand<Canvas> CanvasContextMenuCommand => new(CanvasOpenContextMenu, CanCanvasClick);
+        public RelayCommand<Canvas> CanvasClearCommand => new(CanvasClear, CanCanvasClick);
         public bool CanNodeClick(NodeVM nodeVM) => !IsRunning;
         public bool CanCanvasClick(Canvas canvas) => !IsRunning;
         public async void RunStop(IAlgorithm obj)
@@ -214,11 +216,13 @@ namespace GraphEditor
             {
                 StartNode = nodeVM;
                 nodeVM.Color = Colors.Green; // ���� ��� ��������� �����
+                GraphVM.Graph.StartNode = StartNode.Node;
             }
             else if (EndNode == null)
             {
                 EndNode = nodeVM;
                 nodeVM.Color = Colors.Blue; // ���� ��� �������� �����
+                GraphVM.Graph.EndNode = EndNode.Node;
             }
             else
             {

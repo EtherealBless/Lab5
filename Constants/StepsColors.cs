@@ -9,11 +9,13 @@ namespace GraphEditor.Constants
 {
     internal class StepsColors
     {
-        public readonly static Color DefaultColor = System.Windows.Media.Colors.LightBlue;
-        public readonly static Color NodeColor = System.Windows.Media.Colors.Blue;
-        public readonly static Color EdgeColor = System.Windows.Media.Colors.Black;
-        public readonly static Color SelectedNodeColor = System.Windows.Media.Colors.Red;
-        public readonly static Color SelectedEdgeColor = System.Windows.Media.Colors.Orange;
-        public readonly static Color CheckedNodeColor = System.Windows.Media.Colors.Gray;
+        public readonly static Color DefaultColor = Colors.LightBlue;
+        public readonly static Color NodeColor = Colors.Blue;
+        public readonly static Color EdgeColor = Colors.Black;
+        public readonly static Color SelectedNodeColor = Colors.Red;
+        public readonly static Color SelectedEdgeColor = Colors.Orange;
+        public readonly static Color CheckedNodeColor = Colors.Gray;
+        public readonly static Color CheckedEdgeColor = Colors.Gray;
+        public readonly static Color MarkEdgeColor = Colors.LightBlue;
     }
 }

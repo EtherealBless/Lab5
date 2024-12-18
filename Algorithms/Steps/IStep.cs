@@ -10,7 +10,7 @@ namespace GraphEditor.Algorithms.Steps
 {
     public interface IStep
     {
-        Color Color { get; }
+        Color? Color { get; }
         bool IsPermanent { get; }
     }
 }

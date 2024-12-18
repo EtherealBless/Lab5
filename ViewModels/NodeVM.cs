@@ -71,7 +71,7 @@ public class NodeVM : BaseVM, ICloneable
         X = x;
         Y = y;
         Color = color ?? Constants.StepsColors.DefaultColor;
-        OriginalColor = Color; // Сохраняем исходный цвет
+        OriginalColor = Color; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     }
 
     public object Clone()

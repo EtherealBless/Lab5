@@ -9,6 +9,6 @@ namespace GraphEditor.Algorithms.Steps.Edges
 {
     internal interface IEdgeStep : IStep
     {
-        public EdgeVM Edge { get; set; }
+        public int Id { get; set; }
     }
 }

@@ -1,15 +1,28 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace GraphEditor.ViewModels;
 
-public class EdgeVM : BaseVM, ICloneable
+public class EdgeVM : BaseVM
 {
 
     private NodeVM nodeFrom;
     private NodeVM nodeTo;
-
+    private Color _color = Colors.Black;
+    public Color Color
+    {
+        get
+        {
+            return _color;
+        }
+        set
+        {
+            _color = value;
+            OnPropertyChanged();
+        }
+    }
     public Thickness Margin
     {
         get
@@ -94,7 +107,7 @@ public class EdgeVM : BaseVM, ICloneable
 
     public Point NormalFrom
     {
-        get 
+        get
         {
             Point FromRaw = this.From;
             return new Point(FromRaw.X - Margin.Left, FromRaw.Y - Margin.Top);
@@ -110,22 +123,19 @@ public class EdgeVM : BaseVM, ICloneable
         }
     }
 
-    public EdgeVM(NodeVM nodeFrom, NodeVM nodeTo)
+    public EdgeVM(NodeVM nodeFrom, NodeVM nodeTo, int id)
     {
         NodeFrom = nodeFrom;
         NodeTo = nodeTo;
+        Id = id;
     }
 
     public double Weight { get; set; }
 
-        public EdgeVM(NodeVM nodeFrom, NodeVM nodeTo, double weight = 1.0)
-        {
-            NodeFrom = nodeFrom;
-            NodeTo = nodeTo;
-            Weight = weight;
-        }
-    public object Clone()
-    {
-        return new EdgeVM(NodeFrom, NodeTo);
-    }
+    // public EdgeVM(NodeVM nodeFrom, NodeVM nodeTo, double weight = 1.0)
+    // {
+    //     NodeFrom = nodeFrom;
+    //     NodeTo = nodeTo;
+    //     Weight = weight;
+    // }
 }

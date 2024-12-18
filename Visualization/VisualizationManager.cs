@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using GraphEditor.Algorithms;
 using GraphEditor.Algorithms.Steps;
+using GraphEditor.Algorithms.Steps.Edges;
+using GraphEditor.Algorithms.Steps.Nodes;
 using GraphEditor.ViewModels;
+using System.Windows.Media;
 
 namespace GraphEditor.Visualization
 {
@@ -32,12 +36,37 @@ namespace GraphEditor.Visualization
             var manager = new VisualizationManager();
             await foreach (var step in algorithm.RunAlgorithm(graphVM.Graph))
             {
-                manager._states.Add(CloneState(graphVM));
-                graphVM.ApplyStep(step);
+                var steps = UnrollStep(step);
+                foreach (var unrolledStep in steps)
+                {
+                    manager._states.Add(CloneState(graphVM));
+                    graphVM.ApplyStep(unrolledStep);
+                }
             }
 
             manager._states.Add(CloneState(graphVM));
             return manager;
+        }
+
+        private static List<IStep> UnrollStep(IStep step)
+        {
+            switch (step)
+            {
+                case UpdateNodeStep updateNodeStep:
+                    Color? color;
+                    var steps = new List<RawNodeStep>();
+                    while (true)
+                    {
+                        color = updateNodeStep.Color;
+                        if (color == null)
+                            break;
+                        var newStep = new RawNodeStep(updateNodeStep.NodeId, color, false);
+                        steps.Add(newStep);
+                    };
+                    steps.Last().IsPermanent = true;
+                    return steps.Cast<IStep>().ToList();
+            }
+            return new() { step };
         }
 
         /// <summary>

@@ -12,7 +12,7 @@ namespace GraphEditor.Algorithms.Steps.Nodes
     public class CheckedNodeStep : INodeStep
     {
         public int NodeId { get; }
-        public Color Color => StepsColors.CheckedNodeColor;
+        public Color? Color => StepsColors.CheckedNodeColor;
         public bool IsPermanent => true;
 
         public CheckedNodeStep(int nodeId) => NodeId = nodeId;
