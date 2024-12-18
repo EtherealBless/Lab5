@@ -19,10 +19,10 @@ namespace GraphEditor.Algorithms
             yield return new CheckedNodeStep(graph.Nodes.First().Id);
             yield return new SelectNodeStep(graph.Nodes[1].Id);
             yield return new CheckedNodeStep(graph.Nodes[1].Id);
-            if (graph.Nodes[3].Edges.Count > 0)
-            {
-                yield return new SelectNodeStep(graph.Nodes[3].Id);
-            }
+            // if (graph.Nodes[3].Edges.Count > 0)
+            // {
+            //     yield return new SelectNodeStep(graph.Nodes[3].Id);
+            // }
             Console.WriteLine("Done");
         }
     }

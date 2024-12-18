@@ -1,11 +1,15 @@
-﻿using GraphEditor.ViewModels;
+﻿using GraphEditor.Algorithms;
+using GraphEditor.Algorithms.Steps;
+using GraphEditor.Algorithms.Steps.Nodes;
+using GraphEditor.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace GraphEditor.YunPart
 {
-    public class DijkstraAlgorithm 
+    public class DijkstraAlgorithm : IAlgorithm
     {
         public List<NodeVM> FindShortestPath(NodeVM startNode, NodeVM endNode, GraphVM graphVM)
         {
@@ -54,6 +58,11 @@ namespace GraphEditor.YunPart
 
             path.Reverse();
             return path;
+        }
+
+        public async IAsyncEnumerable<IStep> RunAlgorithm(Graph graph)
+        {
+            yield return new SelectNodeStep(graph.Nodes.First().Id);
         }
     }
 }

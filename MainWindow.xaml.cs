@@ -55,7 +55,7 @@ namespace GraphEditor
                 OnPropertyChanged(nameof(IsStepableBackward));
             }
         }
-    public bool ShouldShowContextMenu { get; set; } = false;
+        public bool ShouldShowContextMenu { get; set; } = false;
 
         private NodeVM _startNode;
         private NodeVM _endNode;
@@ -80,34 +80,10 @@ namespace GraphEditor
             }
         }
 
-        private NodeVM _startNode;
-        private NodeVM _endNode;
-
-        public NodeVM StartNode
+        private void InitGraph()
         {
-            get => _startNode;
-            set
-            {
-                _startNode = value;
-                OnPropertyChanged();
-            }
-        }
 
-        public NodeVM EndNode
-        {
-            get => _endNode;
-            set
-            {
-                _endNode = value;
-                OnPropertyChanged();
-            }
-        }
-
-    public bool ShouldShowContextMenu { get; set; } = false;
-    private void InitGraph()
-    {
-
-        _graph = new Graph();
+            _graph = new Graph();
 
             var Nodes = _graph.Nodes;
             var Edges = _graph.Edges;
@@ -133,74 +109,71 @@ namespace GraphEditor
             EdgesVM.Add(new EdgeVM(NodesVM[0], NodesVM[2]));
             EdgesVM.Add(new EdgeVM(NodesVM[1], NodesVM[2]));
 
-        GraphVM.NodesVM = NodesVM;
-        GraphVM.EdgesVM = EdgesVM;
-    }
-    private void AddContextMenu()
-    {
-        ContextMenu contextMenu = new ContextMenu();
-        Binding binding = new Binding("IsCanvasContextMenuOpen");
-        binding.Source = this;
-        binding.Mode = BindingMode.OneWay;
-        contextMenu.SetBinding(ContextMenu.IsOpenProperty, binding);
-
-        var bindingClearCanvasItem = new Binding("CanvasClearCommand");
-        bindingClearCanvasItem.Source = this;
-        bindingClearCanvasItem.Mode = BindingMode.OneWay;
-        var bindingClearCanvasParamProperty = new Binding();
-        bindingClearCanvasParamProperty.Source = GraphCanvas;
-        var clearCanvasItem = new MenuItem();
-        clearCanvasItem.Header = "Clear canvas";
-        BindingOperations.SetBinding(clearCanvasItem, MenuItem.CommandParameterProperty, bindingClearCanvasParamProperty);
-        BindingOperations.SetBinding(clearCanvasItem, MenuItem.CommandProperty, bindingClearCanvasItem);
-        contextMenu.Items.Add(clearCanvasItem);
-
-        GraphCanvas.ContextMenu = contextMenu;
-    }
-    private Dictionary<string, IAlgorithm> _algorithms = new Dictionary<string, IAlgorithm>()
             GraphVM.NodesVM = NodesVM;
             GraphVM.EdgesVM = EdgesVM;
         }
+        private void AddContextMenu()
+        {
+            ContextMenu contextMenu = new ContextMenu();
+            Binding binding = new Binding("IsCanvasContextMenuOpen");
+            binding.Source = this;
+            binding.Mode = BindingMode.OneWay;
+            contextMenu.SetBinding(ContextMenu.IsOpenProperty, binding);
 
+            var bindingClearCanvasItem = new Binding("CanvasClearCommand");
+            bindingClearCanvasItem.Source = this;
+            bindingClearCanvasItem.Mode = BindingMode.OneWay;
+            var bindingClearCanvasParamProperty = new Binding();
+            bindingClearCanvasParamProperty.Source = GraphCanvas;
+            var clearCanvasItem = new MenuItem();
+            clearCanvasItem.Header = "Clear canvas";
+            BindingOperations.SetBinding(clearCanvasItem, MenuItem.CommandParameterProperty, bindingClearCanvasParamProperty);
+            BindingOperations.SetBinding(clearCanvasItem, MenuItem.CommandProperty, bindingClearCanvasItem);
+            contextMenu.Items.Add(clearCanvasItem);
+
+            GraphCanvas.ContextMenu = contextMenu;
+        }
         private Dictionary<string, IAlgorithm> _algorithms = new Dictionary<string, IAlgorithm>()
         {
-            { "test", new TestAlgorithm() }
+            { "test", new TestAlgorithm() },
+            { "dijkstra", new DijkstraAlgorithm() }
         };
+
 
         public Dictionary<string, IAlgorithm> Algorithms { get => _algorithms; }
 
         public IAlgorithm SelectedAlgorithm { get; set; }
 
-    public RelayCommand<IAlgorithm> RunStopAlgorithm => new(RunStop, CanRun);
-    public RelayCommand<IAlgorithm> StepForwardCommand => new(StepForward, CanStepForward);
-    public RelayCommand<IAlgorithm> StepBackwardCommand => new(StepBackward, CanStepBackward);
-    public RelayCommand<object> FindShortestPathCommand => new(FindShortestPath, CanFindShortestPath);
-    public bool CanRun(object _) => (SelectedAlgorithm != null && !IsRunning) || (IsRunning && SelectedAlgorithm != null);
-    public bool CanStepForward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepForward();
-    public bool CanStepBackward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepBackward();
+        public RelayCommand<IAlgorithm> RunStopAlgorithm => new(RunStop, CanRun);
+        public RelayCommand<IAlgorithm> StepForwardCommand => new(StepForward, CanStepForward);
+        public RelayCommand<IAlgorithm> StepBackwardCommand => new(StepBackward, CanStepBackward);
+        // public RelayCommand<object> FindShortestPathCommand => new(FindShortestPath, CanFindShortestPath);
+        public bool CanRun(object _) => (SelectedAlgorithm != null && !IsRunning) || (IsRunning && SelectedAlgorithm != null);
+        public bool CanStepForward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepForward();
+        public bool CanStepBackward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepBackward();
 
-    public bool IsStepableForward => CanStepForward();
-    public bool IsStepableBackward => CanStepBackward();
-    public RelayCommand<NodeVM> NodeClickCommand => new(NodeClick, CanNodeClick);
-    public RelayCommand<NodeVM> NodeDoubleClickCommand => new(NodeDoubleClick, CanNodeClick);
-    public RelayCommand<Canvas> CanvasClickCommand => new(CanvasClick, CanCanvasClick);
-    public RelayCommand<Canvas> CanvasDoubleClickCommand => new(CanvasDoubleClick, CanCanvasClick);
-    public bool CanNodeClick(NodeVM nodeVM) => !IsRunning;
-    public bool CanCanvasClick(Canvas canvas) => !IsRunning;
-    public async void RunStop(IAlgorithm obj)
-    {
-        if (IsRunning)
+        public bool IsStepableForward => CanStepForward();
+        public bool IsStepableBackward => CanStepBackward();
+        public RelayCommand<NodeVM> NodeClickCommand => new(NodeClick, CanNodeClick);
+        public RelayCommand<NodeVM> NodeDoubleClickCommand => new(NodeDoubleClick, CanNodeClick);
+        public RelayCommand<Canvas> CanvasClickCommand => new(CanvasClick, CanCanvasClick);
+        public RelayCommand<Canvas> CanvasDoubleClickCommand => new(CanvasAddNewNode, CanCanvasClick);
+        public bool CanNodeClick(NodeVM nodeVM) => !IsRunning;
+        public bool CanCanvasClick(Canvas canvas) => !IsRunning;
+        public async void RunStop(IAlgorithm obj)
         {
-            IsRunning = false;
+            if (IsRunning)
+            {
+                IsRunning = false;
+                _timer.Stop();
+                return;
+            }
             _timer.Stop();
-            return;
+            Console.WriteLine("Run");
+            IsRunning = true;
+            visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
+            InitializeTimer();
         }
-        _timer.Stop();
-        Console.WriteLine("Run");
-        IsRunning = true;
-        visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
-        InitializeTimer();
-    }
 
         public async void StepForward(object? obj = null)
         {
@@ -214,26 +187,26 @@ namespace GraphEditor
                 GraphVM = visualizationManager.StepBackward();
         }
 
-    public async void TimerTick(object? sender, EventArgs e)
-    {
-        if (!IsRunning || !visualizationManager.CanStepForward()) return;
-        GraphVM = visualizationManager.StepForward();
-        if (!visualizationManager.CanStepForward())
+        public async void TimerTick(object? sender, EventArgs e)
         {
-            IsRunning = false;
+            if (!IsRunning || !visualizationManager.CanStepForward()) return;
+            GraphVM = visualizationManager.StepForward();
+            if (!visualizationManager.CanStepForward())
+            {
+                IsRunning = false;
+            }
+            Console.WriteLine("Tick");
         }
-        Console.WriteLine("Tick");
-    }
-    private GraphClickStateManager _clickStateManager = new GraphClickStateManager();
-    private void NodeClick(NodeVM nodeVM)
-    {
-        Console.WriteLine($"Click!: {nodeVM.Node.Id}");
-        var coords = Mouse.GetPosition(GraphCanvas);
-        if (_clickStateManager.ProcessClick((int)coords.X, (int)coords.Y, nodeVM) is NewEdgeClick newEdgeClick)
+        private GraphClickStateManager _clickStateManager = new GraphClickStateManager();
+        private void NodeClick(NodeVM nodeVM)
         {
-            GraphVM.AddEdge(newEdgeClick.NodeFrom, newEdgeClick.NodeTo);
+            Console.WriteLine($"Click!: {nodeVM.Node.Id}");
+            var coords = Mouse.GetPosition(GraphCanvas);
+            if (_clickStateManager.ProcessClick((int)coords.X, (int)coords.Y, nodeVM) is NewEdgeClick newEdgeClick)
+            {
+                GraphVM.AddEdge(newEdgeClick.NodeFrom, newEdgeClick.NodeTo);
+            }
         }
-    }
 
         private void NodeDoubleClick(NodeVM nodeVM)
         {
@@ -259,37 +232,37 @@ namespace GraphEditor
         }
 
 
-    private void CanvasClick(Canvas canvas)
-    {
-        Console.WriteLine($"Canvas {canvas != null}");
-    }
-    private void CanvasAddNewNode(Canvas canvas)
-    {
-        var coords = Mouse.GetPosition(canvas);
-        GraphVM.AddNode(new Point(coords.X - NodeVM.DefaultWidth / 2, coords.Y - NodeVM.DefaultHeight / 2));
-        Console.WriteLine($"CanvasDoubleClick: {coords} Canvas Coords: {canvas.ActualWidth} {canvas.ActualHeight}");
-    }
-    private void CanvasOpenContextMenu(Canvas canvas)
-    {
-        ShouldShowContextMenu = true;
-        Console.WriteLine($"CanvasOpenContextMenu: {canvas != null}");
-    }
+        private void CanvasClick(Canvas canvas)
+        {
+            Console.WriteLine($"Canvas {canvas != null}");
+        }
+        private void CanvasAddNewNode(Canvas canvas)
+        {
+            var coords = Mouse.GetPosition(canvas);
+            GraphVM.AddNode(new Point(coords.X - NodeVM.DefaultWidth / 2, coords.Y - NodeVM.DefaultHeight / 2));
+            Console.WriteLine($"CanvasDoubleClick: {coords} Canvas Coords: {canvas.ActualWidth} {canvas.ActualHeight}");
+        }
+        private void CanvasOpenContextMenu(Canvas canvas)
+        {
+            ShouldShowContextMenu = true;
+            Console.WriteLine($"CanvasOpenContextMenu: {canvas != null}");
+        }
 
-    private void CanvasClear(Canvas canvas)
-    {
-        Console.WriteLine($"CanvasClear: {123123}");
-        GraphVM.Clear();
-    }
+        private void CanvasClear(Canvas canvas)
+        {
+            Console.WriteLine($"CanvasClear: {123123}");
+            GraphVM.Clear();
+        }
 
-    public MainWindow()
-    {
-        AllocConsole();
-        InitGraph();
-        InitializeComponent();
-        AddContextMenu();
-        // InitializeTimer();
+        public MainWindow()
+        {
+            AllocConsole();
+            InitGraph();
+            InitializeComponent();
+            AddContextMenu();
+            // InitializeTimer();
 
-    }
+        }
 
         private void InitializeTimer()
         {
