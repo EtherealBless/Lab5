@@ -238,6 +238,7 @@ namespace GraphEditor
 
         private void CanvasClick(Canvas canvas)
         {
+            _clickStateManager.Clear();
             Console.WriteLine($"Canvas {canvas != null}");
         }
         private void CanvasAddNewNode(Canvas canvas)
@@ -255,7 +256,8 @@ namespace GraphEditor
         private void CanvasClear(Canvas canvas)
         {
             Console.WriteLine($"CanvasClear: {123123}");
-            GraphVM.Clear();
+            _graph = new Graph();
+            GraphVM = new GraphVM(_graph, NodeClickCommand, CanvasClickCommand);
         }
 
         public MainWindow()

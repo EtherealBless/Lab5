@@ -143,5 +143,8 @@ public class GraphVM : BaseVM, ICloneable
         _nodesVM.Clear();
         _edgesVM.Clear();
         _nodesDict.Clear();
+        _edgesDict.Clear();
+        _graph.StartNode = null;
+        _graph.EndNode = null;
     }
 }

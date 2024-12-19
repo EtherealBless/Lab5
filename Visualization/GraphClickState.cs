@@ -51,7 +51,7 @@ class EditEdgeClick : ClickState
 class GraphClickStateManager
 {
     private readonly List<ClickState> _clickStates = new();
-
+    public void Clear() => _clickStates.Clear();
     /*
 
     Possible click order:
