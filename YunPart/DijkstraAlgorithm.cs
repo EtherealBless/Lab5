@@ -57,11 +57,15 @@ namespace GraphEditor.YunPart
             }
 
             var path = new List<Node>();
-            for (var at = endNode; at != null; at = previousNodes[at])
+            var at = endNode;
+            for (; at != null && at != startNode; at = previousNodes[at])
             {
                 path.Add(at);
             }
-
+            if (at != null)
+            {
+                path.Add(at);
+            }
             path.Reverse();
             return (path, steps);
         }
@@ -79,7 +83,7 @@ namespace GraphEditor.YunPart
                 yield return new CheckedEdgeStep(path[i - 1].Edges.First(e => e.Target == path[i] || e.Source == path[i]).Id);
                 yield return new CheckedNodeStep(path[i].Id);
             }
-            yield return new UpdateNodeStep(path.Last().Id);
+            // yield return new UpdateNodeStep(path.Last().Id);
         }
     }
 }

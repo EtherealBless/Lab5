@@ -34,6 +34,8 @@ namespace GraphEditor
             {
                 _graphVM = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsStepableForward));
+                OnPropertyChanged(nameof(IsStepableBackward));
             }
         }
 
@@ -151,7 +153,6 @@ namespace GraphEditor
         public bool CanRun(object _) => (SelectedAlgorithm != null && !IsRunning) || (IsRunning && SelectedAlgorithm != null);
         public bool CanStepForward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepForward();
         public bool CanStepBackward(object? _ = null) => visualizationManager != null && GraphVM.NodesVM.Count > 0 && !IsRunning && visualizationManager.CanStepBackward();
-
         public bool IsStepableForward => CanStepForward();
         public bool IsStepableBackward => CanStepBackward();
         public RelayCommand<NodeVM> NodeClickCommand => new(NodeClick, CanNodeClick);
@@ -229,6 +230,7 @@ namespace GraphEditor
                 // ����� ������
                 StartNode.Color = StartNode.OriginalColor;
                 EndNode.Color = EndNode.OriginalColor;
+                GraphVM.Graph.StartNode = nodeVM.Node;
                 StartNode = nodeVM;
                 EndNode = null;
                 nodeVM.Color = Colors.Green; // ���� ��� ��������� �����
@@ -257,6 +259,8 @@ namespace GraphEditor
         {
             Console.WriteLine($"CanvasClear: {123123}");
             _graph = new Graph();
+            EndNode = null;
+            StartNode = null;
             GraphVM = new GraphVM(_graph, NodeClickCommand, CanvasClickCommand);
         }
 

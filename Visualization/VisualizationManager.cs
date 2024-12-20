@@ -75,8 +75,7 @@ namespace GraphEditor.Visualization
         /// <returns>The next state of the graph.</returns>
         public GraphVM StepForward()
         {
-            var state = _states[_stepIndex];
-            _stepIndex++;
+            var state = _states[_stepIndex++];
             return state;
         }
 
@@ -86,12 +85,12 @@ namespace GraphEditor.Visualization
         /// <returns>The previous state of the graph.</returns>
         public GraphVM StepBackward()
         {
+            
             if (_stepIndex == 0)
                 return _states[_stepIndex];
-            if (_stepIndex == _states.Count - 1)
+            if (_stepIndex == _states.Count)
                 _stepIndex--;
-            var state = _states[_stepIndex];
-            _stepIndex--;
+            var state = _states[_stepIndex--];
             return state;
         }
 
