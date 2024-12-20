@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -91,7 +92,7 @@ namespace GraphEditor
             var Edges = _graph.Edges;
 
             Nodes.Add(new Node(1, "1"));
-            Nodes.Add(new Node(2, "23"));
+            Nodes.Add(new Node(2, "2"));
             Nodes.Add(new Node(3, "3"));
 
             Edges.Add(new Edge(Nodes[0], Nodes[1], id: 0));
@@ -138,7 +139,8 @@ namespace GraphEditor
         private Dictionary<string, IAlgorithm> _algorithms = new Dictionary<string, IAlgorithm>()
         {
             { "test", new TestAlgorithm() },
-            { "dijkstra", new DijkstraAlgorithm() }
+            { "dijkstra", new DijkstraAlgorithm() },
+            { "kruskal", new KruskalAlgorithm() }
         };
 
 
