@@ -80,7 +80,7 @@ public class GraphVM : BaseVM, ICloneable
 
     public void AddNode(System.Windows.Point point)
     {
-        var node = new Node(_graph.Nodes.Count + 1, "New node");
+        var node = new Node(_graph.Nodes.Count + 1, $"{_graph.Nodes.Count + 1}");
         var nodeVM = new NodeVM(node, point.X, point.Y);
         _graph.Nodes.Add(node);
         _nodesVM.Add(nodeVM);
