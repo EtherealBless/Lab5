@@ -10,6 +10,8 @@ using System.Windows;
 using GraphEditor.Algorithms.Steps.Nodes;
 using System.Collections.ObjectModel;
 using GraphEditor.Algorithms.Steps.Edges;
+using System.Xml.Serialization;
+using System.IO;
 
 namespace GraphEditor.ViewModels;
 
@@ -147,4 +149,47 @@ public class GraphVM : BaseVM, ICloneable
         _graph.StartNode = null;
         _graph.EndNode = null;
     }
+
+    public void SaveGraph(string path)
+    {
+
+        var nodes = new List<NodeVM>();
+        var nodesIds = nodes.Select(x => x.Node.Id).ToList();
+        
+
+    }
+
+    private class GraphEntity
+    {
+        public int NodeId { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public List<(int, double)> Edges { get; set; }
+
+        public GraphEntity(int nodeId, double x, double y, List<(int, double)> edges)
+        {
+            NodeId = nodeId;
+            X = x;
+            Y = y;
+            Edges = edges;
+        }
+
+        public static GraphEntity Decode(string encoded)
+        {
+            var parts = encoded.Split(';');
+            var nodeId = int.Parse(parts[0]);
+            var x = double.Parse(parts[1]);
+            var y = double.Parse(parts[2]);
+            var edges = parts.Skip(3).Select(x => x.Split(':')).Select(x => (int.Parse(x[0]), double.Parse(x[1]))).ToList();
+            return new GraphEntity(nodeId, x, y, edges);
+        }
+
+        // (nodeId, x, y); ';'.join(edges) 
+        public string Encode()
+        {
+            string edgesString = string.Join(";", Edges.Select(x => x.Item1 + ":" + x.Item2));
+            return $"{NodeId};{X};{Y};{edgesString}";
+        } 
+    }
 }
+
