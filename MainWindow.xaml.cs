@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -16,7 +17,12 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
+using Microsoft.Xaml.Behaviors;
+using Microsoft.VisualBasic;
+using Behaviors = Microsoft.Xaml.Behaviors;
+using VB = Microsoft.VisualBasic;
 
 namespace GraphEditor
 {
@@ -91,12 +97,12 @@ namespace GraphEditor
             var Edges = _graph.Edges;
 
             Nodes.Add(new Node(1, "1"));
-            Nodes.Add(new Node(2, "23"));
+            Nodes.Add(new Node(2, "2"));
             Nodes.Add(new Node(3, "3"));
 
-            Edges.Add(new Edge(Nodes[0], Nodes[1], id: 0));
-            Edges.Add(new Edge(Nodes[0], Nodes[2], id: 1));
-            Edges.Add(new Edge(Nodes[1], Nodes[2], id: 2));
+            Edges.Add(new Edge(Nodes[0], Nodes[1], id: 0, weight: 5)); // Установите вес ребра
+            Edges.Add(new Edge(Nodes[0], Nodes[2], id: 1, weight: 10)); // Установите вес ребра
+            Edges.Add(new Edge(Nodes[1], Nodes[2], id: 2, weight: 3)); // Установите вес ребра
 
             GraphVM = new GraphVM(_graph, NodeClickCommand, CanvasClickCommand);
 
@@ -138,7 +144,8 @@ namespace GraphEditor
         private Dictionary<string, IAlgorithm> _algorithms = new Dictionary<string, IAlgorithm>()
         {
             { "test", new TestAlgorithm() },
-            { "dijkstra", new DijkstraAlgorithm() }
+            { "dijkstra", new DijkstraAlgorithm() },
+            { "kruskal", new KruskalAlgorithm() }
         };
 
 
@@ -163,20 +170,20 @@ namespace GraphEditor
         public RelayCommand<Canvas> CanvasClearCommand => new(CanvasClear, CanCanvasClick);
         public bool CanNodeClick(NodeVM nodeVM) => !IsRunning;
         public bool CanCanvasClick(Canvas canvas) => !IsRunning;
-        public async void RunStop(IAlgorithm obj)
-        {
-            if (IsRunning)
-            {
-                IsRunning = false;
-                _timer.Stop();
-                return;
-            }
-            _timer.Stop();
-            Console.WriteLine("Run");
-            IsRunning = true;
-            visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
-            InitializeTimer();
-        }
+        //public async void RunStop(IAlgorithm obj)
+        //{
+        //    if (IsRunning)
+        //    {
+        //        IsRunning = false;
+        //        _timer.Stop();
+        //        return;
+        //    }
+        //    _timer.Stop();
+        //    Console.WriteLine("Run");
+        //    IsRunning = true;
+        //    visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
+        //    InitializeTimer();
+        //}
 
         public async void StepForward(object? obj = null)
         {
@@ -201,15 +208,16 @@ namespace GraphEditor
             Console.WriteLine("Tick");
         }
         private GraphClickStateManager _clickStateManager = new GraphClickStateManager();
-        private void NodeClick(NodeVM nodeVM)
-        {
-            Console.WriteLine($"Click!: {nodeVM.Node.Id}");
-            var coords = Mouse.GetPosition(GraphCanvas);
-            if (_clickStateManager.ProcessClick((int)coords.X, (int)coords.Y, nodeVM) is NewEdgeClick newEdgeClick)
-            {
-                GraphVM.AddEdge(newEdgeClick.NodeFrom, newEdgeClick.NodeTo);
-            }
-        }
+        //private void NodeClick(NodeVM nodeVM)
+        //{
+        //    Console.WriteLine($"Click!: {nodeVM.Node.Id}");
+        //    var coords = Mouse.GetPosition(GraphCanvas);
+        //    if (_clickStateManager.ProcessClick((int)coords.X, (int)coords.Y, nodeVM) is NewEdgeClick newEdgeClick)
+        //    {
+        //        GraphVM.AddEdge(newEdgeClick.NodeFrom, newEdgeClick.NodeTo);
+        //    }
+        //}
+
 
         private void NodeDoubleClick(NodeVM nodeVM)
         {
@@ -271,7 +279,8 @@ namespace GraphEditor
             InitializeComponent();
             AddContextMenu();
             // InitializeTimer();
-
+            InitializeMouseEvents(); // from print line
+            
         }
 
         private void InitializeTimer()
@@ -301,19 +310,307 @@ namespace GraphEditor
             var shortestPathLogic = new ShortestPathLogic();
             var shortestPath = shortestPathLogic.FindShortestPath(StartNode, EndNode, GraphVM);
 
-            // ���������� ������������
+            
             foreach (var node in GraphVM.NodesVM)
             {
-                node.Color = node.OriginalColor; // �������������� ��������� ����� ���� ������
+                node.Color = node.OriginalColor; 
             }
 
             foreach (var node in shortestPath)
             {
-                node.Color = Colors.Red; // ��������� ������ ����������� ����
+                node.Color = Colors.Red; 
             }
 
             OnPropertyChanged(nameof(GraphVM));
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private NodeVM? _selectedNode = null;
+        private Point _lastMousePosition;
+        private Line _currentEdgeLine;
+        private NodeVM _currentStartNode;
+
+        private void InitializeMouseEvents()
+        {
+            GraphCanvas.MouseMove += OnMouseMove;
+            GraphCanvas.MouseLeftButtonDown += OnMouseLeftButtonDown; // Объединено
+            GraphCanvas.MouseLeftButtonUp += OnMouseLeftButtonUp;
+        }
+
+        private void OnMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_currentEdgeLine != null)
+            {
+                var position = e.GetPosition(GraphCanvas);
+                _currentEdgeLine.X2 = position.X;
+                _currentEdgeLine.Y2 = position.Y;
+            }
+            // Обработка перемещения узла (ранее закомментированный код)
+            else if (_selectedNode != null && e.LeftButton == MouseButtonState.Pressed)
+            {
+                var currentPosition = e.GetPosition(GraphCanvas);
+                var deltaX = currentPosition.X - _lastMousePosition.X;
+                var deltaY = currentPosition.Y - _lastMousePosition.Y;
+
+                _selectedNode.X += deltaX;
+                _selectedNode.Y += deltaY;
+
+                _lastMousePosition = currentPosition;
+
+                OnPropertyChanged(nameof(GraphVM)); // Предполагается, что GraphVM реализует INotifyPropertyChanged
+            }
+        }
+
+        private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var mousePosition = e.GetPosition(GraphCanvas);
+            _lastMousePosition = mousePosition;
+
+            // Проверка клика по узлу (для создания ребра)
+            if (_currentEdgeLine != null)
+            {
+                return; // Если уже рисуется линия, ничего не делаем здесь
+            }
+
+            _selectedNode = GraphVM.NodesVM.FirstOrDefault(node =>
+                Math.Abs(node.X + NodeVM.DefaultWidth / 2 - mousePosition.X) < NodeVM.DefaultWidth / 2 &&
+                Math.Abs(node.Y + NodeVM.DefaultHeight / 2 - mousePosition.Y) < NodeVM.DefaultHeight / 2);
+
+            if (_selectedNode != null)
+            {
+                NodeClick(_selectedNode);
+            }
+            else
+            {
+                // Создание нового узла
+                var newPoint = new Point(mousePosition.X - NodeVM.DefaultWidth / 2, mousePosition.Y - NodeVM.DefaultHeight / 2);
+
+                if (!GraphVM.NodesVM.Any(node =>
+                    Math.Abs(node.X - newPoint.X) < NodeVM.DefaultWidth &&
+                    Math.Abs(node.Y - newPoint.Y) < NodeVM.DefaultHeight))
+                {
+                    GraphVM.AddNode(newPoint);
+                }
+            }
+
+        }
+
+        //private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        //{
+        //    if (_currentEdgeLine != null)
+        //    {
+        //        var mousePosition = e.GetPosition(GraphCanvas);
+        //        var endNode = GraphVM.NodesVM.FirstOrDefault(node =>
+        //            Math.Abs(node.X + NodeVM.DefaultWidth / 2 - mousePosition.X) < NodeVM.DefaultWidth / 2 &&
+        //            Math.Abs(node.Y + NodeVM.DefaultHeight / 2 - mousePosition.Y) < NodeVM.DefaultHeight / 2);
+
+        //        if (endNode != null && _currentStartNode != endNode) // Проверка на соединение узла с самим собой
+        //        {
+        //            GraphVM.AddEdge(_currentStartNode, endNode);
+        //        }
+
+        //        GraphCanvas.Children.Remove(_currentEdgeLine);
+        //        _currentEdgeLine = null;
+        //        _currentStartNode = null;
+        //    }
+        //    _selectedNode = null; // Сброс выделенного узла после перемещения
+        //}
+
+        private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_currentEdgeLine != null)
+            {
+                var mousePosition = e.GetPosition(GraphCanvas);
+                var endNode = GraphVM.NodesVM.FirstOrDefault(node =>
+                    Math.Abs(node.X + NodeVM.DefaultWidth / 2 - mousePosition.X) < NodeVM.DefaultWidth / 2 &&
+                    Math.Abs(node.Y + NodeVM.DefaultHeight / 2 - mousePosition.Y) < NodeVM.DefaultHeight / 2);
+
+                if (endNode != null && _currentStartNode != endNode) // Проверка на соединение узла с самим собой
+                {
+                    GraphVM.AddEdge(_currentStartNode, endNode);
+                }
+
+                GraphCanvas.Children.Remove(_currentEdgeLine);
+                _currentEdgeLine = null;
+                _currentStartNode = null;
+            }
+            _selectedNode = null; // Сброс выделенного узла после перемещения
+        }
+
+
+
+        //private void NodeClick(NodeVM nodeVM)
+        //{
+        //    if (_currentEdgeLine != null)
+        //    {
+        //        if (_currentStartNode == nodeVM)
+        //        {
+        //            GraphCanvas.Children.Remove(_currentEdgeLine);
+        //        }
+        //        else
+        //        {
+        //            _currentStartNode = nodeVM;
+        //            _currentEdgeLine = new Line
+        //            {
+        //                Stroke = Brushes.Black,
+        //                StrokeThickness = 2,
+        //                X1 = nodeVM.X + nodeVM.Width / 2,
+        //                Y1 = nodeVM.Y + nodeVM.Height / 2,
+        //                X2 = nodeVM.X + nodeVM.Width / 2,
+        //                Y2 = nodeVM.Y + nodeVM.Height / 2
+        //            };
+        //            GraphCanvas.Children.Add(_currentEdgeLine);
+        //        }
+        //        _currentEdgeLine = null;
+        //        _currentStartNode = null;
+        //        return;
+        //    }
+
+        //    _currentStartNode = nodeVM;
+        //    _currentEdgeLine = new Line
+        //    {
+        //        Stroke = Brushes.Black,
+        //        StrokeThickness = 2,
+        //        X1 = nodeVM.X + nodeVM.Width / 2,
+        //        Y1 = nodeVM.Y + nodeVM.Height / 2,
+        //        X2 = nodeVM.X + nodeVM.Width / 2,
+        //        Y2 = nodeVM.Y + nodeVM.Height / 2
+        //    };
+        //    GraphCanvas.Children.Add(_currentEdgeLine);
+        //}
+        private void NodeClick(NodeVM nodeVM)
+        {
+            if (_currentEdgeLine != null)
+            {
+                if (_currentStartNode == nodeVM)
+                {
+                    GraphCanvas.Children.Remove(_currentEdgeLine);
+                }
+                else
+                {
+                    GraphVM.AddEdge(_currentStartNode, nodeVM);
+                }
+                _currentEdgeLine = null;
+                _currentStartNode = null;
+                return;
+            }
+
+            _currentStartNode = nodeVM;
+            _currentEdgeLine = new Line
+            {
+                Stroke = Brushes.Black,
+                StrokeThickness = 2,
+                X1 = nodeVM.X + nodeVM.Width / 2,
+                Y1 = nodeVM.Y + nodeVM.Height / 2,
+                X2 = nodeVM.X + nodeVM.Width / 2,
+                Y2 = nodeVM.Y + nodeVM.Height / 2
+            };
+            GraphCanvas.Children.Add(_currentEdgeLine);
+        }
+
+
+
+        private void AddNodeToCanvas(NodeVM nodeVM)
+        {
+            var nodeElement = new Ellipse
+            {
+                Width = nodeVM.Width,
+                Height = nodeVM.Height,
+                Fill = new SolidColorBrush(nodeVM.Color)
+            };
+
+            Canvas.SetLeft(nodeElement, nodeVM.X);
+            Canvas.SetTop(nodeElement, nodeVM.Y);
+
+            nodeElement.DataContext = nodeVM;
+            nodeElement.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(OnNodeMouseLeftButtonDown), true);
+
+            GraphCanvas.Children.Add(nodeElement);
+        }
+
+        private void OnNodeMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.DataContext is not NodeVM nodeVM)
+                return;
+
+            NodeClick(nodeVM); // Используем общую функцию NodeClick
+            e.Handled = true;
+        }
+
+        // REALIZATION OF GRAPH PRICES
+        // REALIZATION OF GRAPH PRICES// REALIZATION OF GRAPH PRICES
+        // REALIZATION OF GRAPH PRICES// REALIZATION OF GRAPH PRICES
+        // REALIZATION OF GRAPH PRICES
+
+
+        public RelayCommand<EdgeVM> EdgeClickCommand => new(EdgeClick, CanEdgeClick);
+
+        private void EdgeClick(EdgeVM edgeVM)
+        {
+            var inputBox = new InputBox("Enter new weight:", "Edit Weight", edgeVM.Weight.ToString());
+            if (inputBox.ShowDialog() == true)
+            {
+                if (double.TryParse(inputBox.Answer, out double newWeight))
+                {
+                    _graphVM.UpdateEdgeWeight(edgeVM.Id, newWeight);
+                }
+                else
+                {
+                    MessageBox.Show("Invalid weight value.");
+                }
+            }
+        }
+        //public async void RunStop(IAlgorithm obj)
+        //{
+        //    if (IsRunning)
+        //    {
+        //        IsRunning = false;
+        //        _timer.Stop();
+        //        return;
+        //    }
+        //    _timer.Stop();
+        //    Console.WriteLine("Run");
+        //    IsRunning = true;
+
+        //    // Проверьте, не пересоздается ли GraphVM или граф
+        //    visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
+
+        //    // Проверьте, остается ли GraphVM.EdgesVM неизменным
+        //    InitializeTimer();
+        //}
+
+        private bool CanEdgeClick(EdgeVM edgeVM) => !IsRunning;
+
+        public async void RunStop(IAlgorithm obj)
+        {
+            if (IsRunning)
+            {
+                IsRunning = false;
+                _timer.Stop();
+                return;
+            }
+            _timer.Stop();
+            Console.WriteLine("Run");
+            IsRunning = true;
+
+            // Убедитесь, что веса ребер не изменяются
+            visualizationManager = await VisualizationManager.WarmUp(GraphVM, SelectedAlgorithm);
+            InitializeTimer();
+        }
+
+
+
 
     }
 }

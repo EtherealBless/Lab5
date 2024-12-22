@@ -82,7 +82,7 @@ public class GraphVM : BaseVM, ICloneable
 
     public void AddNode(System.Windows.Point point)
     {
-        var node = new Node(_graph.Nodes.Count + 1, "New node");
+        var node = new Node(_graph.Nodes.Count + 1, $"{_graph.Nodes.Count + 1}");
         var nodeVM = new NodeVM(node, point.X, point.Y);
         _graph.Nodes.Add(node);
         _nodesVM.Add(nodeVM);
@@ -90,16 +90,16 @@ public class GraphVM : BaseVM, ICloneable
         OnPropertyChanged(nameof(NodesVM));
     }
 
-    public void AddEdge(NodeVM nodeFrom, NodeVM nodeTo)
-    {
-        int newId = _edgesVM.Count == 0 ? 0 : _edgesVM.Count + 1;
-        var edge = new Edge(nodeFrom.Node, nodeTo.Node, id: newId);
-        nodeFrom.Node.Edges.Add(edge);
-        nodeTo.Node.Edges.Add(edge);
-        _graph.Edges.Add(edge);
-        _edgesVM.Add(new EdgeVM(nodeFrom, nodeTo, newId));
-        OnPropertyChanged(nameof(EdgesVM));
-    }
+    //public void AddEdge(NodeVM nodeFrom, NodeVM nodeTo)
+    //{
+    //    int newId = _edgesVM.Count == 0 ? 0 : _edgesVM.Count + 1;
+    //    var edge = new Edge(nodeFrom.Node, nodeTo.Node, id: newId);
+    //    nodeFrom.Node.Edges.Add(edge);
+    //    nodeTo.Node.Edges.Add(edge);
+    //    _graph.Edges.Add(edge);
+    //    _edgesVM.Add(new EdgeVM(nodeFrom, nodeTo, newId));
+    //    OnPropertyChanged(nameof(EdgesVM));
+    //}
 
     public void ChangeColor(Node node, System.Windows.Media.Color color)
     {
@@ -122,6 +122,79 @@ public class GraphVM : BaseVM, ICloneable
         }
     }
 
+    //public object Clone()
+    //{
+    //    var clone = new GraphVM(Graph, null, CanvasClickCommand);
+    //    clone.NodesVM = new ObservableCollection<NodeVM>(NodesVM.Select(x => (NodeVM)x.Clone()).ToList());
+
+    //    var edges = new ObservableCollection<EdgeVM>();
+    //    foreach (var edgeVM in EdgesVM)
+    //    {
+    //        var nodeFrom = clone._nodesDict[edgeVM.NodeFrom.Node.Id];
+    //        var nodeTo = clone._nodesDict[edgeVM.NodeTo.Node.Id];
+    //        edges.Add(new EdgeVM(nodeFrom, nodeTo, edgeVM.Id));
+    //        edges.Last().Color = edgeVM.Color;
+    //    }
+    //    clone.EdgesVM = edges;
+    //    return clone;
+    //}
+
+
+
+    public void Clear()
+    {
+        _graph.Nodes.Clear();
+        _graph.Edges.Clear();
+        _nodesVM.Clear();
+        _edgesVM.Clear();
+        _nodesDict.Clear();
+        _edgesDict.Clear();
+        _graph.StartNode = null;
+        _graph.EndNode = null;
+    }
+
+
+    //YUN PART  YUN PART YUN PART YUN PART YUN PART YUN PART 
+
+
+
+    public void UpdateEdgeWeight(int edgeId, double newWeight)
+    {
+        if (_edgesDict.ContainsKey(edgeId))
+        {
+            var edgeVM = _edgesDict[edgeId];
+            edgeVM.Weight = newWeight;
+            var edge = _graph.Edges.FirstOrDefault(e => e.Id == edgeId);
+            if (edge != null)
+            {
+                edge.Weight = newWeight;
+            }
+            OnPropertyChanged(nameof(EdgesVM));
+        }
+        else
+        {
+            Console.WriteLine($"Edge with ID {edgeId} not found in the dictionary.");
+        }
+    }
+
+
+
+
+    public void AddEdge(NodeVM nodeFrom, NodeVM nodeTo)
+    {
+        int newId = _edgesVM.Count == 0 ? 0 : _edgesVM.Count;
+        double defaultWeight = 10;
+        var edge = new Edge(nodeFrom.Node, nodeTo.Node, id: newId, weight: defaultWeight);
+        nodeFrom.Node.Edges.Add(edge);
+        nodeTo.Node.Edges.Add(edge);
+        _graph.Edges.Add(edge);
+        var edgeVM = new EdgeVM(nodeFrom, nodeTo, newId);
+        edgeVM.Weight = defaultWeight; // ���������� ��� �����
+        _edgesVM.Add(edgeVM);
+        _edgesDict[newId] = edgeVM; // �������� �������
+        OnPropertyChanged(nameof(EdgesVM));
+    }
+
     public object Clone()
     {
         var clone = new GraphVM(Graph, null, CanvasClickCommand);
@@ -134,6 +207,7 @@ public class GraphVM : BaseVM, ICloneable
             var nodeTo = clone._nodesDict[edgeVM.NodeTo.Node.Id];
             edges.Add(new EdgeVM(nodeFrom, nodeTo, edgeVM.Id));
             edges.Last().Color = edgeVM.Color;
+            edges.Last().Weight = edgeVM.Weight; // ��������� ��� �����
         }
         clone.EdgesVM = edges;
         return clone;

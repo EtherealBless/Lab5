@@ -27,9 +27,32 @@ namespace GraphEditor.Visualization
         /// Warms up the visualization manager by running the algorithm on the graph,
         /// creating a list of all the states of the graph that the algorithm goes through.
         /// </summary>
-        /// <param name="graphVM">The initial state of the graph.</param>
-        /// <param name="algorithm">The algorithm to be run.</param>
+        // <param name="graphVM">The initial state of the graph.</param>
+        // <param name="algorithm">The algorithm to be run.</param>
         /// <returns>A visualization manager with the list of states.</returns>
+        /// 
+
+
+
+
+        //public static async Task<VisualizationManager> WarmUp(GraphVM graphVM, IAlgorithm algorithm)
+        //{
+        //    graphVM = CloneState(graphVM);
+        //    var manager = new VisualizationManager();
+        //    await foreach (var step in algorithm.RunAlgorithm(graphVM.Graph))
+        //    {
+        //        var steps = UnrollStep(step);
+        //        foreach (var unrolledStep in steps)
+        //        {
+        //            manager._states.Add(CloneState(graphVM));
+        //            graphVM.ApplyStep(unrolledStep);
+        //        }
+        //    }
+
+        //    manager._states.Add(CloneState(graphVM));
+        //    return manager;
+        //}
+
         public static async Task<VisualizationManager> WarmUp(GraphVM graphVM, IAlgorithm algorithm)
         {
             graphVM = CloneState(graphVM);
